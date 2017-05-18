@@ -6,7 +6,7 @@ Kohonen's algorithm - ❌
 
 Neural gas - ❌
 
-# Required modules
+## Required modules
 ```
 numpy + mlk
 scipy
