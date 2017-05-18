@@ -1,21 +1,33 @@
 import numpy as np
 
-class Node:
-    def __init__(self, ileft, iright, itop, ibottom, num_weights):
-        self.weights = np.random.random_sample((num_weights,))
-        self.x = ileft + (iright - ileft) / 2.0
-        self.y = itop + (ibottom - itop) / 2.0
-
-    def getEuclideanDist(self, input_vec):
-        return np.linalg.norm(self.weights - input_vec)
-
-class Kohenen:
-    def __init__(self, input_data, nodes_num):
+class Kohonen:
+    def __init__(self, input_data, neurons_size, learning_rate, sigma):
+        self.neurons_size = neurons_size
+        self.learning_rate = learning_rate
+        self.sigma = sigma
         self.input_data = input_data
-        self.nodes_num = nodes_num
-        self.map_radius = max(constWindowWidth, constWindowHeight)/2
-        self.time_constant = iterations_num / np.log(self.map_radius);
-        self.neighbourhood_radius = self.map_radius * np.exp(-m_iterations_cnt / self.time_constant);
+
+        self.neurons = [[np.random.random_sample((self.input_data.shape[1],)) for x in range(neurons_size[1])] for y in range(neurons_size[0])]
+
+    def getEuclideanDist(self, a, b):
+        return np.linalg.norm(a - b)
+
+    def getBMU(self):
+        for i_data in self.input_data:
+            dist = self.getEuclideanDist(i_data, self.neurons[0][0])
+            winning_neuron = self.neurons[0][0]
+
+            for row in self.neurons:
+                for neuron in row:
+                    tmp = self.getEuclideanDist(i_data, neuron)
+                    if tmp < dist:
+                        dist = tmp
+                        winning_neuron = neuron
+
+            print ("{} ----- {} ----- {}".format(i_data, winning_neuron, dist))
+
+
+
 
 colors = np.array(
          [[0., 0., 0.],
@@ -41,6 +53,6 @@ color_names = \
          'cyan', 'violet', 'yellow', 'white',
          'darkgrey', 'mediumgrey', 'lightgrey']
 
-node = Node(1, 4, 3, 1, 5)
 
-#kohenen = Kohenen(input_data, 3)
+kohonen = Kohonen(colors, (900, 300), 0.3, 0.3)
+kohonen.getBMU()
