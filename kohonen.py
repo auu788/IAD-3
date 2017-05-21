@@ -1,23 +1,43 @@
 import numpy as np
+import matplotlib.pylab as plb
 import matplotlib.pyplot as plt
+# pylint: disable=E1101
 
 class Kohonen:
     def __init__(self, input_data, neurons_size, learning_rate, iterations_num):
-        self.neurons_size = neurons_size
-        self.start_learning_rate = learning_rate
-        self.learning_rate = self.start_learning_rate
         self.input_data = input_data
-        self.t = 0
-        self.max_iterations_num = iterations_num
-
+        self.learning_rate = learning_rate
+        self.iterations_num = iterations_num
+        self.current_iteration = 0
+        
         self.neurons = [[np.random.random_sample((self.input_data.shape[1],)) for x in range(neurons_size[1])] for y in range(neurons_size[0])]
         self.width = neurons_size[0]
         self.height = neurons_size[1]
-        self.map_radius = max(self.width, self.height) / 2.0
-        self.TIME = self.max_iterations_num / np.log(self.map_radius)
 
+        self.init_learning_rate = self.learning_rate
+        self.init_nbhood_radius = (self.width + self.height) / 2.0
+        self.time_const = self.iterations_num / np.log(self.init_nbhood_radius)
+    
     def getEuclideanDist(self, a, b):
         return np.linalg.norm(a - b)
+
+    def getNeighborhoodRadius(self, iteration):
+        return self.init_nbhood_radius * np.exp(-(iteration / self.time_const))
+    
+    def getInfluence(self, distance, radius):
+        return np.exp(-((distance * distance) / (2 * radius * radius)))
+    
+    def getNeighbors(self, x, y, radius):
+        radius = int(radius) - 1
+        rows, cols = self.height, self.width
+        neighbors = []
+
+        for i in range(x - radius, x + radius + 1):
+            for j in range(y - radius, y + radius + 1):
+                if cols > i >= 0 and rows > j >= 0:
+                    neighbors.append((i, j))
+        
+        return neighbors
 
     def getBMU(self, i_data):
         dist = self.getEuclideanDist(i_data, self.neurons[0][0])
@@ -34,68 +54,40 @@ class Kohonen:
                     x = x_i
                     y = y_i
 
-        self.x = x
-        self.y = y
+        self.bmu_x = x
+        self.bmu_y = y
         return winning_neuron
-
-    def getNBHoodRadius(self, iteration):
-        return self.map_radius * np.exp(-iteration / self.TIME)
-
-    def getInfluence(self, distance, radius):
-        return np.exp(-distance / (2 * (radius * radius)))
-
+    
     def start(self):
-        iteration = 0
+        iter_cnt = 0
 
-        while (iteration < self.max_iterations_num):
-            print ("Iteracja: {}".format(iteration))
-            nbh_radius = self.getNBHoodRadius(iteration)
-
+        while iter_cnt < self.iterations_num:
+            print (iter_cnt)
             rand_index = np.random.randint(self.input_data.shape[0])
-            inp = self.input_data[rand_index]
+            selected_input_data = self.input_data[rand_index]
 
-            #for inp in self.input_data:
-            bmu = self.getBMU(inp)
-            #print ("{} --- {} --- [{}, {}]".format(inp, bmu, self.x, self.y))
-            # Szukanie X i Y dla BMU
-            xstart = int(self.x - nbh_radius - 1)
-            ystart = int(self.y - nbh_radius - 1)
-            xend = int(xstart + (nbh_radius * 2) + 1)
-            yend = int(ystart + (nbh_radius * 2) + 1)
+            bmu = self.getBMU(selected_input_data)
+            radius = self.getNeighborhoodRadius(iter_cnt)
 
-
-            if xend > self.width:
-                xend = self.width
-            if xstart < 0:
-                xstart = 0
-            if yend > self.height:
-                yend = self.height
-            if ystart < 0:
-                ystart = 0
-
-            print ("{} - {}".format((xend - xstart), (yend - ystart)))
-            for x in range(xstart, xend):
-                for y in range(ystart, yend):
-                    if self.neurons[x][y] is not bmu:
-                        dist = self.getEuclideanDist(bmu, self.neurons[x][y])
-
-                        if dist <= (nbh_radius * nbh_radius):
-
-                            inf = self.getInfluence(dist, nbh_radius)
-            #                print ("{}".format((inp - self.neurons[x][y]) * self.learning_rate * inf))
-                            self.neurons[x][y] += (inp - self.neurons[x][y]) * self.learning_rate * inf
-                #print ("\n")
-            #self.createIMG()
-            iteration += 1
-            self.learning_rate = self.start_learning_rate * np.exp(-iteration / self.max_iterations_num)
-
+            neighbours = self.getNeighbors(self.bmu_x, self.bmu_y, radius)
+            
+            for neighbour in neighbours:
+                nb_x, nb_y = neighbour[1], neighbour[0]
+                dist = self.getEuclideanDist(bmu, self.neurons[nb_x][nb_y])
+                inf = self.getInfluence(dist, radius)
+                
+                self.neurons[nb_x][nb_y] += inf * self.learning_rate * (selected_input_data - self.neurons[nb_x][nb_y])
+            
+            self.learning_rate = self.init_learning_rate * np.exp(-(iter_cnt / self.time_const))
+            iter_cnt += 1
+    
     def createIMG(self):
         from PIL import Image
-
-        im = Image.new("RGB", (40, 40))
+        myk = 50
+        im = Image.new("RGB", (myk, myk))
         pix = im.load()
-        for x in range(40):
-            for y in range(40):
+        for x in range(myk):
+            for y in range(myk):
                 r = self.neurons[x][y][0]
                 g = self.neurons[x][y][1]
                 b = self.neurons[x][y][2]
@@ -104,34 +96,34 @@ class Kohonen:
 
         im.show()
 
+    def plotUMatrix(self):
+        outer = []
+        for item in self.neurons:
+            tmp = np.zeros((4,4))
+            t = []
+            for i in item:
+                t.append(np.mean(i))
+            
+            outer.append(t)
+        
+        
+        a = np.array(outer)
 
-
+        fig = plb.figure()
+        plt.imshow(a, interpolation='gaussian', cmap=plb.cm.gist_rainbow, extent=(0.5,np.shape(a)[0]+0.5,0.5,np.shape(a)[1]+0.5))
+        plt.colorbar()
+        plt.show()
 
 colors = np.array(
-         [[0., 0., 1.],
-          [0., 1., 0.],
-          [1., 0., 0.],
-          [0., 1., 1.],
-          [1., 0., 1.],
-          [1., 1., 0.]])
-
-# store the names of the colors for visualization later on
-color_names = \
-        ['black', 'blue', 'darkblue', 'skyblue',
-         'greyblue', 'lilac', 'green', 'red',
-         'cyan', 'violet', 'yellow', 'white',
-         'darkgrey', 'mediumgrey', 'lightgrey']
+            [[0., 0., 1.],
+            [0., 1., 0.],
+            [1., 0., 0.]])
 
 with open('data-1k.txt', 'r') as f:
     tmp = f.read().splitlines()
     tmp = [x.split(",") for x in tmp]
     input_data = np.array(tmp, dtype='float64')
 
-kohonen = Kohonen(colors, (40, 40), 0.1, 1000)
+kohonen = Kohonen(input_data, (5, 5), 0.03, 100)
 kohonen.start()
-kohonen.createIMG()
-#print (kohonen.neurons)
-# for item in kohonen.neurons:
-#     plt.scatter(np.array(item)[:, 0], np.array(item)[:, 1], s=50)
-#
-# plt.show()
+kohonen.plotVoronoiDiagram('vororo.png')
