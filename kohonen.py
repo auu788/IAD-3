@@ -126,4 +126,3 @@ with open('data-1k.txt', 'r') as f:
 
 kohonen = Kohonen(input_data, (5, 5), 0.03, 100)
 kohonen.start()
-kohonen.plotVoronoiDiagram('vororo.png')
