@@ -29,7 +29,7 @@ class Kohonen:
     
     def getNeighbors(self, x, y, radius):
         radius = int(radius) - 1
-        rows, cols = self.height, self.width
+        rows, cols = self.width, self.height
         neighbors = []
 
         for i in range(x - radius, x + radius + 1):
@@ -113,16 +113,29 @@ class Kohonen:
         plt.imshow(a, interpolation='gaussian', cmap=plb.cm.gist_rainbow, extent=(0.5,np.shape(a)[0]+0.5,0.5,np.shape(a)[1]+0.5))
         plt.colorbar()
         plt.show()
+    
+    def plotScatter(self, input_data, file_name):
+        out = []
+        for row in self.neurons:
+            for neuron in row:
+                out.append(neuron)
+        
+        plt.scatter(np.array(input_data)[:, 0], np.array(input_data)[:, 1], c='b', s=10)
+
+        plt.scatter(np.array(out)[:, 0], np.array(out)[:, 1], c='r', linewidth=1, s=50)
+
+        plt.savefig(file_name, dpi=700)
 
 colors = np.array(
             [[0., 0., 1.],
             [0., 1., 0.],
             [1., 0., 0.]])
 
-with open('data-1k.txt', 'r') as f:
+with open('data-10k.txt', 'r') as f:
     tmp = f.read().splitlines()
     tmp = [x.split(",") for x in tmp]
     input_data = np.array(tmp, dtype='float64')
 
-kohonen = Kohonen(input_data, (5, 5), 0.03, 100)
+kohonen = Kohonen(input_data, (5, 5), 0.5, 5000)
 kohonen.start()
+kohonen.plotScatter(input_data, 'lololo.png')
