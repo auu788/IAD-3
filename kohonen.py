@@ -4,8 +4,17 @@ import matplotlib.pyplot as plt
 # pylint: disable=E1101
 
 class Kohonen:
-    def __init__(self, input_data, neurons_size, learning_rate, iterations_num):
-        self.input_data = input_data
+    def __init__(self, input_data, neurons_size, learning_rate, iterations_num, normalized_data):
+        with open(input_data, 'r') as f:
+            tmp = f.read().splitlines()
+            tmp = [x.split(",") for x in tmp]
+            input_data = np.array(tmp, dtype='float64')
+        
+        if normalized_data:
+            self.input_data = np.array([x / np.linalg.norm(x) for x in input_data])
+        else:
+            self.input_data = input_data
+
         self.learning_rate = learning_rate
         self.iterations_num = iterations_num
         self.current_iteration = 0
@@ -81,22 +90,23 @@ class Kohonen:
             self.learning_rate = self.init_learning_rate * np.exp(-(iter_cnt / self.time_const))
             iter_cnt += 1
     
-    def createIMG(self):
+    def plotRGBImage(self, file_name):
         from PIL import Image
-        myk = 50
-        im = Image.new("RGB", (myk, myk))
+
+        im = Image.new("RGB", (self.width, self.height))
         pix = im.load()
-        for x in range(myk):
-            for y in range(myk):
+        for x in range(self.width):
+            for y in range(self.height):
                 r = self.neurons[x][y][0]
                 g = self.neurons[x][y][1]
                 b = self.neurons[x][y][2]
                 rgb = (int(r * 255), int(g * 255), int(b * 255))
                 pix[x,y] = rgb
 
-        im.show()
+        #im.show()
+        im.save(file_name)
 
-    def plotUMatrix(self):
+    def plotUMatrix(self, file_name):
         outer = []
         for item in self.neurons:
             t = []
@@ -111,30 +121,16 @@ class Kohonen:
         fig = plb.figure()
         plt.imshow(a, interpolation='gaussian', cmap=plb.cm.gist_rainbow, extent=(0.5,np.shape(a)[0]+0.5,0.5,np.shape(a)[1]+0.5))
         plt.colorbar()
-        plt.show()
+        plt.savefig(file_name, dpi=700)
     
-    def plotScatter(self, input_data, file_name):
+    def plotScatter(self, file_name):
         out = []
         for row in self.neurons:
             for neuron in row:
                 out.append(neuron)
         
-        plt.scatter(np.array(input_data)[:, 0], np.array(input_data)[:, 1], c='b', s=10)
+        plt.scatter(np.array(self.input_data)[:, 0], np.array(self.input_data)[:, 1], c='b', s=10)
 
         plt.scatter(np.array(out)[:, 0], np.array(out)[:, 1], c='r', linewidth=1, s=50)
 
         plt.savefig(file_name, dpi=700)
-
-colors = np.array(
-            [[0., 0., 1.],
-            [0., 1., 0.],
-            [1., 0., 0.]])
-
-with open('data-10k.txt', 'r') as f:
-    tmp = f.read().splitlines()
-    tmp = [x.split(",") for x in tmp]
-    input_data = np.array(tmp, dtype='float64')
-
-kohonen = Kohonen(input_data, (5, 5), 0.5, 5000)
-kohonen.start()
-kohonen.plotScatter(input_data, 'lololo.png')

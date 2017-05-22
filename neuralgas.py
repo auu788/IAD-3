@@ -1,16 +1,26 @@
 import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.pylab as plb
 # pylint: disable=E1101
 
 class NeuralGas:
-    def __init__(self, input_data, neurons_size, learning_rate, iterations_num):
-        self.input_data = input_data
-        self.iterations_num = iterations_num
+    def __init__(self, input_data, neurons_size, learning_rate, iterations_num, normalized_data):
+        with open(input_data, 'r') as f:
+            tmp = f.read().splitlines()
+            tmp = [x.split(",") for x in tmp]
+            input_data = np.array(tmp, dtype='float64')
 
+        if normalized_data:
+            self.input_data = np.array([x / np.linalg.norm(x) for x in input_data])
+        else:
+            self.input_data = input_data
+
+        self.iterations_num = iterations_num
         self.neurons = [[np.random.random_sample((self.input_data.shape[1],)) for x in range(neurons_size[1])] for y in range(neurons_size[0])]
         self.radius_min = 0.01
-        self.radius_max = (neurons_size[0] + neurons_size[1]) / 2.0
+        self.radius_max = (neurons_size[0] + neurons_size[1]) / 2
 
-        self.learning_rate_min = 0.001
+        self.learning_rate_min = 0.01
         self.learning_rate_init = learning_rate
 
     def getEuclideanDist(self, a, b):
@@ -27,45 +37,50 @@ class NeuralGas:
         
         return sorted(distances.items(), key=lambda x:x[1])
     
-    def getInfluence(self, position, iteration):
-        radius = self.radius_max*pow((self.radius_min / self.radius_max), (iteration / self.iterations_num))
+    def getRadius(self, iteration):
+        return self.radius_max * ((self.radius_min / self.radius_max) ** (iteration / self.iterations_num))
+
+    def getInfluence(self, position, radius):
         return np.exp(-(position / radius))
 
     def start(self):
         for iter_cnt in range(self.iterations_num):
-            print (iter_cnt)
+            print ("Iteracja: {}".format(iter_cnt))
+
             rand_index = np.random.randint(self.input_data.shape[0])
             selected_input_data = self.input_data[rand_index]
 
             sorted_neurons = self.getSortedNeurons(selected_input_data)
-            
+            radius = self.getRadius(iter_cnt)
+
             for index, (key, value) in enumerate(sorted_neurons):
                 y, x = key[0], key[1]
-                inf = self.getInfluence(index, iter_cnt)
-
-                learning_rate = self.learning_rate_init * pow((self.learning_rate_min / self.learning_rate_init), (iter_cnt / self.iterations_num))
-                self.neurons[x][y] += learning_rate * inf * (selected_input_data - self.neurons[x][y])
+                inf = self.getInfluence(index, radius)
+                
+                learning_rate = self.learning_rate_init * ((self.learning_rate_min / self.learning_rate_init) ** (iter_cnt / self.iterations_num))
+                self.neurons[x][y] += inf * (selected_input_data - self.neurons[x][y])
     
-    def createIMG(self):
-        from PIL import Image
-        myk = 10
-        im = Image.new("RGB", (myk, myk))
-        pix = im.load()
-        for x in range(myk):
-            for y in range(myk):
-                r = self.neurons[x][y][0]
-                g = self.neurons[x][y][1]
-                b = self.neurons[x][y][2]
-                rgb = (int(r * 255), int(g * 255), int(b * 255))
-                pix[x,y] = rgb
+    def plotVoronoiDiagram(self, file_name):
+        from scipy.spatial import Voronoi, voronoi_plot_2d
 
-        im.show()
+        a = []
+        for item in self.neurons:
+            for e in item:
+                a.append(e)
+
+        vor = Voronoi(a)
+        voronoi_plot_2d(vor)
+        plt.savefig(file_name, dpi=700)
+        #plt.show()
+    
+    def plotScatter(self, file_name):
+        out = []
+        for row in self.neurons:
+            for neuron in row:
+                out.append(neuron)
         
-colors = np.array(
-            [[0., 0., 1.],
-            [0., 1., 0.],
-            [1., 0., 0.]])
+        plt.scatter(np.array(self.input_data)[:, 0], np.array(self.input_data)[:, 1], c='b', s=10)
+        plt.scatter(np.array(out)[:, 0], np.array(out)[:, 1], c='r', linewidth=1, s=50)
 
-neuralgas = NeuralGas(colors, (10, 10), 0.5, 500)
-neuralgas.start()
-neuralgas.createIMG()
+        #plt.show()
+        plt.savefig(file_name, dpi=700)

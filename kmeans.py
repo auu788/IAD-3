@@ -4,18 +4,16 @@ import matplotlib.pyplot as plt
 from scipy.spatial import Voronoi, voronoi_plot_2d
 
 class KMeans:
-    def __init__(self, file_name, k):
+    def __init__(self, input_data, k):
         self.k = k
         self.centroids = None
         self.clusters = None
         self.global_delta = None
 
-        with open(file_name, 'r') as f:
+        with open(input_data, 'r') as f:
             tmp = f.read().splitlines()
             tmp = [x.split(",") for x in tmp]
             self.input_data = np.array(tmp, dtype='float64')
-
-        print (self.input_data)
 
     def getEuclideanDist(self, a, b):
         return np.linalg.norm(a - b)
@@ -113,7 +111,7 @@ class KMeans:
 
     def plotScatter(self, file_name):
         for i, (k, v) in enumerate(self.clusters.items()):
-            cmap = plt.cm.get_cmap("hsv", len(kmeans.centroids)+1)
+            cmap = plt.cm.get_cmap("hsv", len(self.centroids)+1)
             plt.scatter(np.array(v)[:, 0], np.array(v)[:, 1], c=cmap(k), s=10)
 
             reshaped = np.reshape(self.centroids[k], (1, self.centroids[k].shape[0]))
@@ -125,8 +123,3 @@ class KMeans:
         vor = Voronoi(self.centroids)
         voronoi_plot_2d(vor)
         plt.savefig(file_name, dpi=700)
-
-kmeans = KMeans('f.txt', k=14)
-kmeans.start(iterations=1000, eps=11)
-kmeans.plotScatter('scatter.png')
-kmeans.plotVoronoiDiagram('vor.png')
