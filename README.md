@@ -2,9 +2,9 @@
 
 K-Means - ✔️
 
-Kohonen's algorithm - ❌
+Kohonen's algorithm - ✔️ / ❌
 
-Neural gas - ❌
+Neural gas - ✔️
 
 ## Required modules
 ```
