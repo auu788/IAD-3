@@ -99,7 +99,6 @@ class Kohonen:
     def plotUMatrix(self):
         outer = []
         for item in self.neurons:
-            tmp = np.zeros((4,4))
             t = []
             for i in item:
                 t.append(np.mean(i))
