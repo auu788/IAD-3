@@ -115,7 +115,7 @@ class KMeans:
             plt.scatter(np.array(v)[:, 0], np.array(v)[:, 1], c=cmap(k), s=10)
 
             reshaped = np.reshape(self.centroids[k], (1, self.centroids[k].shape[0]))
-            plt.scatter(reshaped[:, 0], reshaped[:, 1], marker='o', facecolors='none', edgecolors=cmap(k), linewidth=5, s=300)
+            plt.scatter(reshaped[:, 0], reshaped[:, 1], marker='x', c='r', linewidth=1, s=500)
 
         plt.savefig(file_name, dpi=700)
 

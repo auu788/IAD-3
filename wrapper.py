@@ -16,14 +16,16 @@ if __name__ == "__main__":
 
 
 
+
     """ Algorytm Kohonena
         Dostępne wykresy:
         - plotScatter(input_data, file_name)
         - plotUMatrix(file_name)
         - plotRGBImage(file_name --- tylko dla danych colors.txt
     """
-    #kohonen = Kohonen(input_data = "colors.txt", neurons_size = (10, 10), learning_rate = 0.5, iterations_num = 1000, normalized_data = True)
+    #kohonen = Kohonen(input_data = "data-1k.txt", neurons_size = (5, 5), learning_rate = 0.5, iterations_num = 100)
     #kohonen.start()
+    #print(kohonen.calculateError())
     #kohonen.plotScatter(file_name = "kohonen-scatter.png")
     #kohonen.plotUMatrix(file_name = "kohonen-umatrix.png")
     #kohonen.plotRGBImage(file_name = "kohonen-rgb.png")
@@ -36,11 +38,9 @@ if __name__ == "__main__":
         Dostępne wykresy:
         - plotScatter(file_name)
         - plotVoronoiDiagram(file_name)
-
-        normalized_data = True ===> Dane w kółku
-        normalized_data = False ===> Dane w spirali
     """
-    #neuralgas = NeuralGas(input_data = "data-1k.txt", neurons_size = (10, 10), learning_rate = 0.5, iterations_num = 1000, normalized_data = True)
+    #neuralgas = NeuralGas(input_data = "data-1k.txt", neurons_size = (5, 5), learning_rate = 0.5, iterations_num = 100)
     #neuralgas.start()
+    #print(neuralgas.calculateError())
     #neuralgas.plotScatter(file_name = "neural-gas.png")
     #neuralgas.plotVoronoiDiagram(file_name = "neural-gas.png")
