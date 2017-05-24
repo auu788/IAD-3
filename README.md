@@ -1,10 +1,11 @@
 # IAD - 3
 
-K-Means - ✔️
-
-Kohonen's algorithm - ✔️ / ❌
-
-Neural gas - ✔️
+Algorithms:
+```
+- K-Means
+- Kohonen's SOM
+- Neural Gas
+```
 
 ## Required modules
 ```
