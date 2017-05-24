@@ -10,7 +10,8 @@ class NeuralGas:
             tmp = [x.split(",") for x in tmp]
             input_data = np.array(tmp, dtype='float64')
 
-        self.input_data = np.array([((x - np.min(input_data)) / (np.max(input_data) - np.min(input_data))) for x in input_data])
+        self.input_data = np.array([(x / np.linalg.norm(x)) for x in input_data]) # Normalizacja do [-1, 1]
+        #self.input_data = np.array([((x - np.min(input_data)) / (np.max(input_data) - np.min(input_data))) for x in input_data]) # Normalizacja do [0, 1]
 
         self.iterations_num = iterations_num
         self.neurons = [[np.random.random_sample((self.input_data.shape[1],)) for x in range(neurons_size[1])] for y in range(neurons_size[0])]
