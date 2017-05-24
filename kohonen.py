@@ -10,7 +10,8 @@ class Kohonen:
             tmp = [x.split(",") for x in tmp]
             input_data = np.array(tmp, dtype='float64')
         
-        self.input_data = np.array([((x - np.min(input_data)) / (np.max(input_data) - np.min(input_data))) for x in input_data])
+        self.input_data = np.array([(x / np.linalg.norm(x)) for x in input_data]) # Normalizacja do [-1, 1]
+        #self.input_data = np.array([((x - np.min(input_data)) / (np.max(input_data) - np.min(input_data))) for x in input_data]) # Normalizacja do [0, 1]
 
         self.learning_rate = learning_rate
         self.iterations_num = iterations_num
@@ -23,7 +24,10 @@ class Kohonen:
         self.init_learning_rate = self.learning_rate
         self.init_nbhood_radius = max(self.width, self.height) / 2.0
         self.time_const = self.iterations_num / np.log(self.init_nbhood_radius)
-    
+        
+        self.potential_min = 0.75
+        self.potential = np.ones((self.width, self.height))
+
     def getEuclideanDist(self, a, b):
         return np.linalg.norm(a - b)
 
@@ -45,16 +49,26 @@ class Kohonen:
         
         return neighbors
 
+
     def getBMU(self, i_data):
-        dist = self.getEuclideanDist(i_data, self.neurons[0][0])
-        winning_neuron = self.neurons[0][0]
-        x = 0
-        y = 0
+        get_out = False
+        for y_i, row in enumerate(self.neurons):
+            if get_out:
+                break
+
+            for x_i, neuron in enumerate(row):
+                if self.potential[y_i][x_i] > self.potential_min:
+                    dist = self.getEuclideanDist(i_data, self.neurons[y_i][x_i])
+                    winning_neuron = self.neurons[y_i][x_i]
+                    x = x_i
+                    y = y_i
+                    get_out = True
+                    break
 
         for y_i, row in enumerate(self.neurons):
             for x_i, neuron in enumerate(row):
                 tmp = self.getEuclideanDist(i_data, neuron)
-                if tmp < dist:
+                if tmp < dist and self.potential[y_i][x_i] > self.potential_min:
                     dist = tmp
                     winning_neuron = neuron
                     x = x_i
@@ -62,8 +76,19 @@ class Kohonen:
         
         self.bmu_x = x
         self.bmu_y = y
+        self.updatePotential()
         return winning_neuron
     
+    def updatePotential(self):
+        for y_, row in enumerate(self.neurons):
+            for x_, neuron in enumerate(row):
+                if y_ == self.bmu_y and x_ == self.bmu_x:
+                    self.potential[y_][x_] -= self.potential_min
+                else:
+                    self.potential[y_][x_] += 1 / (self.width * self.height)
+        
+        #print (self.bmu_y, self.bmu_x, "\n", self.potential)
+
     def start(self):
         iter_cnt = 0
 
@@ -81,14 +106,14 @@ class Kohonen:
             #neighbours = self.getNeighbors(self.bmu_x, self.bmu_y, radius)
             #self.potential[self.bmu_x][self.bmu_y] -= self.pmin
 
-            for x_n, row in enumerate(self.neurons):
-                for y_n, neuron in enumerate(row):
-                    dist = self.getEuclideanDist(np.array([self.bmu_x, self.bmu_y]), np.array([x_n, y_n]))
+            for y_n, row in enumerate(self.neurons):
+                for x_n, neuron in enumerate(row):
+                    dist = self.getEuclideanDist(np.array([self.bmu_y, self.bmu_x]), np.array([y_n, x_n]))
                     inf = self.getInfluence(dist, radius)
                     
                     #print ("BMU: [{}, {}], Neuronek: [{}, {}], Dist: {}, Gauss: {}".format(self.bmu_x, self.bmu_y, x_n, y_n, dist, inf))
                     #print ("Przed: ", self.neurons[x_n][y_n])
-                    self.neurons[x_n][y_n] += inf * self.learning_rate * (selected_input_data - self.neurons[x_n][y_n])
+                    self.neurons[y_n][x_n] += inf * self.learning_rate * (selected_input_data - self.neurons[y_n][x_n])
                     #print ("Po: ", self.neurons[x_n][y_n])
             """for neighbour in neighbours:
                 nb_x, nb_y = neighbour[1], neighbour[0]
@@ -151,5 +176,16 @@ class Kohonen:
         plt.scatter(np.array(self.input_data)[:, 0], np.array(self.input_data)[:, 1], c='b', s=10)
 
         plt.scatter(np.array(out)[:, 0], np.array(out)[:, 1], c='r', linewidth=1, s=50)
+        plt.savefig(file_name, dpi=700)
+    
+    def plotVoronoiDiagram(self, file_name):
+        from scipy.spatial import Voronoi, voronoi_plot_2d
 
+        a = []
+        for item in self.neurons:
+            for e in item:
+                a.append(e)
+
+        vor = Voronoi(a)
+        voronoi_plot_2d(vor)
         plt.savefig(file_name, dpi=700)
