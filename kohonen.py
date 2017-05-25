@@ -166,7 +166,8 @@ class Kohonen:
         plt.imshow(a, interpolation='nearest', cmap=plb.cm.gist_rainbow, extent=(0.5,np.shape(a)[0]+0.5,0.5,np.shape(a)[1]+0.5))
         plt.colorbar()
         plt.savefig(file_name, dpi=700)
-    
+        plt.close()
+
     def plotScatter(self, file_name):
         out = []
         for row in self.neurons:
@@ -177,7 +178,8 @@ class Kohonen:
 
         plt.scatter(np.array(out)[:, 0], np.array(out)[:, 1], c='r', linewidth=1, s=50)
         plt.savefig(file_name, dpi=700)
-    
+        plt.close()
+
     def plotVoronoiDiagram(self, file_name):
         from scipy.spatial import Voronoi, voronoi_plot_2d
 
@@ -189,3 +191,12 @@ class Kohonen:
         vor = Voronoi(a)
         voronoi_plot_2d(vor)
         plt.savefig(file_name, dpi=700)
+        plt.close()
+
+    def getNeurons(self):
+        out = []
+        for row in self.neurons:
+            for neuron in row:
+                out.append(neuron)
+        
+        return np.array(out)

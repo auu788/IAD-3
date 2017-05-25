@@ -4,16 +4,25 @@ import matplotlib.pyplot as plt
 from scipy.spatial import Voronoi, voronoi_plot_2d
 
 class KMeans:
-    def __init__(self, input_data, k):
+    def __init__(self, input_data, k, normalized = False):
         self.k = k
         self.centroids = None
         self.clusters = None
         self.global_delta = None
 
-        with open(input_data, 'r') as f:
-            tmp = f.read().splitlines()
-            tmp = [x.split(",") for x in tmp]
-            self.input_data = np.array(tmp, dtype='float64')
+        if isinstance(input_data, str):
+            with open(input_data, 'r') as f:
+                tmp = f.read().splitlines()
+                tmp = [x.split(",") for x in tmp]
+                input_file = np.array(tmp, dtype='float64')
+            
+            if normalized:
+                self.input_data = np.array([(x / np.linalg.norm(x)) for x in input_file]) # Normalizacja do [-1, 1]
+            else:
+                self.input_data = input_file
+
+        else:
+            self.input_data = input_data
 
     def getEuclideanDist(self, a, b):
         return np.linalg.norm(a - b)
@@ -31,6 +40,7 @@ class KMeans:
         # dla K = 2
         # [[x_min, x_max]
         # [y_min, y_max]]
+        print (maxmins_gen)
         return maxmins_gen
 
     def generateKCentroids(self):
@@ -40,8 +50,8 @@ class KMeans:
             #print ("Centroid #", i+1)
             tmp = []
             for item in range(len(self.input_data[0])):
-                random = int(np.random.uniform(borders[item][0], borders[item][1]))
-                #print ("Os #{}, losowa wartosc: {}".format(item+1, random))
+                random = np.random.uniform(borders[item][0], borders[item][1])
+                print ("Os #{}, losowa wartosc: {}".format(item+1, random))
                 tmp.append(random)
 
             centroids_tmp[i] = np.array(tmp)

@@ -4,14 +4,17 @@ import matplotlib.pylab as plb
 # pylint: disable=E1101
 
 class NeuralGas:
-    def __init__(self, input_data, neurons_size, learning_rate, iterations_num):
+    def __init__(self, input_data, neurons_size, learning_rate, iterations_num, normalized = True):
         with open(input_data, 'r') as f:
             tmp = f.read().splitlines()
             tmp = [x.split(",") for x in tmp]
             input_data = np.array(tmp, dtype='float64')
 
-        self.input_data = np.array([(x / np.linalg.norm(x)) for x in input_data]) # Normalizacja do [-1, 1]
-        #self.input_data = np.array([((x - np.min(input_data)) / (np.max(input_data) - np.min(input_data))) for x in input_data]) # Normalizacja do [0, 1]
+        if normalized:
+            self.input_data = np.array([(x / np.linalg.norm(x)) for x in input_data]) # Normalizacja do [-1, 1]
+            #self.input_data = np.array([((x - np.min(input_data)) / (np.max(input_data) - np.min(input_data))) for x in input_data]) # Normalizacja do [0, 1]
+        else:
+            self.input_data = input_data
 
         self.iterations_num = iterations_num
         self.neurons = [[np.random.random_sample((self.input_data.shape[1],)) for x in range(neurons_size[1])] for y in range(neurons_size[0])]
@@ -43,7 +46,7 @@ class NeuralGas:
 
     def start(self):
         for iter_cnt in range(self.iterations_num):
-            print ("Iteracja: {}, blad kwantyzacji: {}".format(iter_cnt, self.calculateError()))
+            #print ("Iteracja: {}, blad kwantyzacji: {}".format(iter_cnt, self.calculateError()))
             print ("Iteracja: {}".format(iter_cnt))
 
             rand_index = np.random.randint(self.input_data.shape[0])
@@ -94,6 +97,7 @@ class NeuralGas:
         voronoi_plot_2d(vor)
         plt.savefig(file_name, dpi=700)
         #plt.show()
+        plt.close()
     
     def plotScatter(self, file_name):
         out = []
@@ -106,3 +110,12 @@ class NeuralGas:
 
         #plt.show()
         plt.savefig(file_name, dpi=700)
+        plt.close()
+    
+    def getNeurons(self):
+        out = []
+        for row in self.neurons:
+            for neuron in row:
+                out.append(neuron)
+        
+        return np.array(out)
